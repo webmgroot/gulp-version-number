@@ -32,6 +32,7 @@
  *          // missing items will take the global settings in
  *          // the completion
  * 			{
+ *              'ignore': 'filename_without_ext', // String or Array
  *				'type'  : 'js',
  *			    'attr'  : ['src', 'custom-src'] // String or Array, undefined this will use default. css: "href", js: ...
  *				'key'   : '_v',
@@ -212,18 +213,36 @@ module.exports = function (options) {
         }
         return content;
     }
+    
+    function regExpFile(filename, type) {
+        return new RegExp(filename + '.' + type + '$', 'g');
+    }
 
     function appendto(content, k, v) {
         this.attr = this['attr'] ? [].concat(this.attr) : [DEFAULT_ATTR[this.type]];
-        var sts = content.match(DETECTION[this.type]);
+        var sts = content.match(DETECTION[this.type]),
+            ignore = this.ignore;
         if (Array.isArray(sts) && sts.length) {
             var regExp = new RegExp('(' + this.attr.join('|') + ')' + '=[\'"]?([^>\'"]*)[\'"]?', 'g');
             sts.forEach(function (_s) {
                 var _r = _s;
                 var _RULE;
+                
+            loop:
                 while (_RULE = regExp.exec(_s)) {
                     if (_RULE[2]) {
                         var _UrlPs = parseURL(_RULE[2]);
+                        if (ignore instanceof Array) {
+                            for (let name of ignore) {
+                                if (name && regExpFile(name, this.type).exec(_UrlPs.host)) {
+                                    continue loopRULE;
+                                }
+                            }
+                        } else if (ignore instanceof String) {
+                            if (ignore && regExpFile(ignore, this.type).exec(_UrlPs.host)) {
+                                continue;
+                            }
+                        }
                         var _Query = queryToJson(_UrlPs.query);
                         var _Append = {};
                         if (!_Query.hasOwnProperty(k) || this['cover']) {
