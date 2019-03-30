@@ -235,7 +235,7 @@ module.exports = function (options) {
                         if (ignore instanceof Array) {
                             for (let name of ignore) {
                                 if (name && regExpFile(name, this.type).exec(_UrlPs.host)) {
-                                    continue loopRULE;
+                                    continue loop;
                                 }
                             }
                         } else if (ignore instanceof String) {
